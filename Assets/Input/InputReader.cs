@@ -7,6 +7,7 @@ using static PlayerControls;
 [CreateAssetMenu(fileName = "New Input Reader", menuName = "Input/Input Reader")]
 public class InputReader : ScriptableObject, IPlayerActions
 {
+    public Vector2 AimPosition{get; private set;}
     public event Action<bool> PrimaryFireEvent;
     public event Action<Vector2> MoveEvent;
     private PlayerControls playerControls;
@@ -30,5 +31,10 @@ public class InputReader : ScriptableObject, IPlayerActions
         else if(context.canceled)
             PrimaryFireEvent?.Invoke(false);
 
+    }
+
+    public void OnAim(InputAction.CallbackContext context)
+    {
+        AimPosition = context.ReadValue<Vector2>();
     }
 }
