@@ -62,6 +62,11 @@ public class ProjectileLauncher : NetworkBehaviour
         GameObject projectileInstance = Instantiate(serverProjectilePrefab, spawnPos, Quaternion.identity);
         projectileInstance.transform.up = direction;
         Physics2D.IgnoreCollision(playerCollider, projectileInstance.GetComponent<Collider2D>());
+
+        if(projectileInstance.TryGetComponent<DealDamageOnContact>(out DealDamageOnContact dealDamageOnContact))
+        {
+            dealDamageOnContact.SetOwner(OwnerClientId);
+        }
         if (projectileInstance.TryGetComponent<Rigidbody2D>(out Rigidbody2D rb))
         {
             rb.velocity = rb.transform.up * projectileSpeed;
@@ -86,5 +91,4 @@ public class ProjectileLauncher : NetworkBehaviour
             rb.velocity = rb.transform.up * projectileSpeed;
         }
     }
-
 }
