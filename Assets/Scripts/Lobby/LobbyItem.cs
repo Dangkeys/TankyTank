@@ -19,11 +19,13 @@ public class LobbyItem : MonoBehaviour
     public void Initialise(LobbiesList lobbiesList,Lobby lobby)
     {
         this.lobbiesList = lobbiesList;
+        this.lobby = lobby;
         lobbyNameText.text = lobby.Name;
         lobbyPlayersText.text = $"{lobby.Players.Count}/{lobby.MaxPlayers}";
     }
     private void Join()
     {
+        Debug.Log(lobbiesList);
         lobbiesList.JoinAsync(lobby);
     }
 }

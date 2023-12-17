@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 4006632208646453520}
   - component: {fileID: 2175379275043094979}
   m_Layer: 5
-  m_Name: jOINtEXT
+  m_Name: joinText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -380,6 +380,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 026ab91c16cb1bd4db2708e48b88c27b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  joinButton: {fileID: 5874234463288911629}
   lobbyNameText: {fileID: 2135266580292967996}
   lobbyPlayersText: {fileID: 4302819777847957174}
 --- !u!1 &7934006176043894665
