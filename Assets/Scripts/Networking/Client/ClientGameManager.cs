@@ -6,35 +6,28 @@ using System.Threading.Tasks;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using Unity.Networking.Transport.Relay;
-using Unity.Services.Authentication;
 using Unity.Services.Core;
 using Unity.Services.Relay;
 using Unity.Services.Relay.Models;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class ClientGameManager
+public class ClientGameManager : MonoBehaviour
 {
     private JoinAllocation allocation;
-
-    private NetworkClient networkClient;
-
     private const string MenuSceneName = "Menu";
-
     public async Task<bool> InitAsync()
     {
         await UnityServices.InitializeAsync();
-
-        networkClient = new NetworkClient(NetworkManager.Singleton);
-
         AuthState authState = await AuthenticationWrapper.DoAuthAsync();
-
         if (authState == AuthState.Authenticated)
         {
             return true;
         }
-
-        return false;
+        else
+        {
+            return false;
+        }
     }
 
     public void GoToMenu()
@@ -48,27 +41,21 @@ public class ClientGameManager
         {
             allocation = await Relay.Instance.JoinAllocationAsync(joinCode);
         }
-        catch (Exception e)
+        catch(Exception e)
         {
             Debug.Log(e);
             return;
         }
-
         UnityTransport transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
-
         RelayServerData relayServerData = new RelayServerData(allocation, "dtls");
         transport.SetRelayServerData(relayServerData);
-
         UserData userData = new UserData
         {
-            userName = PlayerPrefs.GetString(NameSelector.PLAYER_NAME_KEY, "Missing Name"),
-            userAuthId = AuthenticationService.Instance.PlayerId
+            userName = PlayerPrefs.GetString(NameSelector.PLAYER_NAME_KEY, "Missing Name")
         };
         string payload = JsonUtility.ToJson(userData);
         byte[] payloadBytes = Encoding.UTF8.GetBytes(payload);
-
         NetworkManager.Singleton.NetworkConfig.ConnectionData = payloadBytes;
-
         NetworkManager.Singleton.StartClient();
     }
 }
