@@ -25,7 +25,6 @@ public class LobbyItem : MonoBehaviour
     }
     private void Join()
     {
-        Debug.Log(lobbiesList);
         lobbiesList.JoinAsync(lobby);
     }
 }

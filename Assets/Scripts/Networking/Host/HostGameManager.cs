@@ -1,38 +1,42 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Unity.Services.Lobbies.Models;
+using System.Text;
 using System.Threading.Tasks;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using Unity.Networking.Transport.Relay;
+using Unity.Services.Authentication;
 using Unity.Services.Lobbies;
+using Unity.Services.Lobbies.Models;
 using Unity.Services.Relay;
 using Unity.Services.Relay.Models;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using System.Data.SqlTypes;
-using System.Text;
 
 public class HostGameManager
 {
-    private string lobbyId;
-    private const string GAME_SCENE = "Game";
     private Allocation allocation;
-    private String joinCode;
-    private const int MAX_CONNECTIONS = 20;
+    private string joinCode;
+    private string lobbyId;
+
     private NetworkServer networkServer;
+
+    private const int MaxConnections = 20;
+    private const string GameSceneName = "Game";
+
     public async Task StartHostAsync()
     {
         try
         {
-            allocation = await Relay.Instance.CreateAllocationAsync(MAX_CONNECTIONS);
+            allocation = await Relay.Instance.CreateAllocationAsync(MaxConnections);
         }
         catch (Exception e)
         {
             Debug.Log(e);
             return;
         }
+
         try
         {
             joinCode = await Relay.Instance.GetJoinCodeAsync(allocation.AllocationId);
@@ -43,6 +47,12 @@ public class HostGameManager
             Debug.Log(e);
             return;
         }
+
+        UnityTransport transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
+
+        RelayServerData relayServerData = new RelayServerData(allocation, "dtls");
+        transport.SetRelayServerData(relayServerData);
+
         try
         {
             CreateLobbyOptions lobbyOptions = new CreateLobbyOptions();
@@ -55,36 +65,41 @@ public class HostGameManager
                         value: joinCode
                     )
                 }
-
             };
-            string lobbyName = PlayerPrefs.GetString(NameSelector.PLAYER_NAME_KEY, "Unknown");
-            Lobby lobby =
-            await Lobbies.Instance.CreateLobbyAsync($"{lobbyName}'s lobby", MAX_CONNECTIONS, lobbyOptions);
+            string playerName = PlayerPrefs.GetString(NameSelector.PLAYER_NAME_KEY, "Unknown");
+            Lobby lobby = await Lobbies.Instance.CreateLobbyAsync(
+                $"{playerName}'s Lobby", MaxConnections, lobbyOptions);
+
             lobbyId = lobby.Id;
-            HostSingleton.Instance.StartCoroutine(HeartBeatLobby(15));
+
+            HostSingleton.Instance.StartCoroutine(HearbeatLobby(15));
         }
         catch (LobbyServiceException e)
         {
             Debug.Log(e);
             return;
         }
-        UnityTransport transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
-        RelayServerData relayServerData = new RelayServerData(allocation, "dtls");
-        transport.SetRelayServerData(relayServerData);
+
         networkServer = new NetworkServer(NetworkManager.Singleton);
+
         UserData userData = new UserData
         {
-            userName = PlayerPrefs.GetString(NameSelector.PLAYER_NAME_KEY, "Missing Name")
+            userName = PlayerPrefs.GetString(NameSelector.PLAYER_NAME_KEY, "Missing Name"),
+            userAuthId = AuthenticationService.Instance.PlayerId
         };
         string payload = JsonUtility.ToJson(userData);
         byte[] payloadBytes = Encoding.UTF8.GetBytes(payload);
+
         NetworkManager.Singleton.NetworkConfig.ConnectionData = payloadBytes;
+
         NetworkManager.Singleton.StartHost();
-        NetworkManager.Singleton.SceneManager.LoadScene(GAME_SCENE, LoadSceneMode.Single);
+
+        NetworkManager.Singleton.SceneManager.LoadScene(GameSceneName, LoadSceneMode.Single);
     }
-    private IEnumerator HeartBeatLobby(float waitTimeSeconds)
+
+    private IEnumerator HearbeatLobby(float waitTimeSeconds)
     {
-        WaitForSecondsRealtime delay = new WaitForSecondsRealtime(waitTimeSeconds); ;
+        WaitForSecondsRealtime delay = new WaitForSecondsRealtime(waitTimeSeconds);
         while (true)
         {
             Lobbies.Instance.SendHeartbeatPingAsync(lobbyId);
@@ -92,4 +107,3 @@ public class HostGameManager
         }
     }
 }
-
