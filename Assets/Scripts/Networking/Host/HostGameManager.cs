@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Text;
 using System.Threading.Tasks;
 using Unity.Netcode;
@@ -14,13 +15,13 @@ using Unity.Services.Relay.Models;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class HostGameManager
+public class HostGameManager: IDisposable
 {
     private Allocation allocation;
     private string joinCode;
     private string lobbyId;
 
-    private NetworkServer networkServer;
+    public NetworkServer NetworkServer {get; private set;}
 
     private const int MaxConnections = 20;
     private const string GameSceneName = "Game";
@@ -80,7 +81,7 @@ public class HostGameManager
             return;
         }
 
-        networkServer = new NetworkServer(NetworkManager.Singleton);
+        NetworkServer = new NetworkServer(NetworkManager.Singleton);
 
         UserData userData = new UserData
         {
@@ -105,5 +106,23 @@ public class HostGameManager
             Lobbies.Instance.SendHeartbeatPingAsync(lobbyId);
             yield return delay;
         }
+    }
+
+    public async void Dispose()
+    {
+        HostSingleton.Instance.StopCoroutine(nameof(HearbeatLobby));
+        if(!string.IsNullOrEmpty(lobbyId))
+        {
+            try
+            {
+                await Lobbies.Instance.DeleteLobbyAsync(lobbyId);
+            }
+            catch(LobbyServiceException e)
+            {
+                Debug.Log(e);
+            }
+            lobbyId = string.Empty;
+        }
+        NetworkServer?.Dispose();
     }
 }
