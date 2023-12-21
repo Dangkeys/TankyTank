@@ -30,6 +30,8 @@ public class NetworkServer : IDisposable
         authIdToUserData[userData.userAuthId] = userData;
 
         response.Approved = true;
+        response.Position = SpawnPoint.GetRandomSpawnPos();
+        response.Rotation = Quaternion.identity;
         response.CreatePlayerObject = true;
     }
 
@@ -47,7 +49,7 @@ public class NetworkServer : IDisposable
             authIdToUserData.Remove(authId);
         }
     }
-    public UserData GetUserDataFromClientId(ulong clientId)
+    public UserData GetUserDataByClientId(ulong clientId)
     {
         if(!clientIdToAuth.TryGetValue(clientId, out string authId)) return null;
         if(!authIdToUserData.TryGetValue(authId, out UserData userData)) return null;

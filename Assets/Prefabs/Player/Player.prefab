@@ -353,7 +353,7 @@ GameObject:
   - component: {fileID: 9179190375351925339}
   - component: {fileID: 6419276933698733315}
   - component: {fileID: 973593505048505024}
-  - component: {fileID: 2815114314738774249}
+  - component: {fileID: 6855170084379357694}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -553,7 +553,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   TotalCoins:
     m_InternalValue: 0
---- !u!114 &2815114314738774249
+--- !u!114 &6855170084379357694
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -565,9 +565,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 762dd44c2135921469136ac06483392a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  followCamera: {fileID: 1227614942710181770}
+  virtualCamera: {fileID: 1227614942710181770}
+  <Health>k__BackingField: {fileID: -523413169648557764}
   ownerPriority: 15
-  notOwnerPriority: 10
   PlayerName:
     m_InternalValue:
       utf8LengthInBytes: 0
@@ -815,7 +815,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a9908e33f21e62542bb7ba5110f6230c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  player: {fileID: 2815114314738774249}
+  player: {fileID: 6855170084379357694}
   playerNameText: {fileID: 7524069204458157304}
 --- !u!1 &6401565992698039723
 GameObject:
