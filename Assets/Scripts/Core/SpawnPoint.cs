@@ -10,6 +10,11 @@ public class SpawnPoint : MonoBehaviour
     {
         spawnPoints.Add(this);
     }
+    
+    private void OnDisable()
+    {
+        spawnPoints.Remove(this);
+    }
     public static Vector3 GetRandomSpawnPos()
     {
         if(spawnPoints.Count == 0)
@@ -17,10 +22,6 @@ public class SpawnPoint : MonoBehaviour
             return Vector3.zero;
         }
         return spawnPoints[Random.Range(0, spawnPoints.Count)].transform.position;
-    }
-    private void Ondisable()
-    {
-        spawnPoints.Remove(this);
     }
     private void OnDrawGizmosSelected()
     {

@@ -29,15 +29,14 @@ public class RespawnHandler : NetworkBehaviour
         TankPlayer.OnPlayerSpawned -= HandlePlayerSpawned;
         TankPlayer.OnPlayerDespawned -= HandlePlayerDespawned;
     }
-    private void HandlePlayerDespawned(TankPlayer player)
-    {
-        player.Health.OnDie -= (health) => HandlePlayerDie(player);
-    }
 
     private void HandlePlayerSpawned(TankPlayer player)
     {
-        
         player.Health.OnDie += (health) => HandlePlayerDie(player);
+    }
+    private void HandlePlayerDespawned(TankPlayer player)
+    {
+        player.Health.OnDie -= (health) => HandlePlayerDie(player);
     }
 
     private void HandlePlayerDie(TankPlayer player)

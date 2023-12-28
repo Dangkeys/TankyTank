@@ -11,7 +11,7 @@ public class TankPlayer : NetworkBehaviour
     [Header("References")]
     [SerializeField] private CinemachineVirtualCamera virtualCamera;
     [field: SerializeField] public Health Health { get; private set; }
-    [field: SerializeField] public CoinWallet Wallet {get; private set;}
+    [field: SerializeField] public CoinWallet Wallet { get; private set; }
     [SerializeField] private SpriteRenderer minimapIcon;
     [SerializeField] private Texture2D crosshair;
     [SerializeField] private Color ownerMiniMapColor;
@@ -24,8 +24,16 @@ public class TankPlayer : NetworkBehaviour
     {
         if (IsServer)
         {
-            UserData userData =
-                HostSingleton.Instance.GameManager.NetworkServer.GetUserDataByClientId(OwnerClientId);
+            UserData userData = null;
+            if (IsHost)
+            {
+                userData =
+                    HostSingleton.Instance.GameManager.NetworkServer.GetUserDataByClientId(OwnerClientId);
+            }else
+            {
+                userData = 
+                    ServerSingleton.Instance.GameManager.NetworkServer.GetUserDataByClientId(OwnerClientId);
+            }
 
             PlayerName.Value = userData.userName;
 
@@ -35,7 +43,7 @@ public class TankPlayer : NetworkBehaviour
         {
             virtualCamera.Priority = ownerPriority;
             minimapIcon.color = ownerMiniMapColor;
-            Cursor.SetCursor(crosshair, new Vector2(crosshair.width/2, crosshair.height /2), CursorMode.Auto);
+            Cursor.SetCursor(crosshair, new Vector2(crosshair.width / 2, crosshair.height / 2), CursorMode.Auto);
         }
     }
     public override void OnNetworkDespawn()
