@@ -17,7 +17,7 @@ public struct LeaderboardEntityState : INetworkSerializable, IEquatable<Leaderbo
         serializer.SerializeValue(ref PlayerName);
         serializer.SerializeValue(ref Coins);
     }
-        public bool Equals(LeaderboardEntityState other)
+    public bool Equals(LeaderboardEntityState other)
     {
         return ClientId == other.ClientId && PlayerName.Equals(other.PlayerName) && Coins == other.Coins;
     }

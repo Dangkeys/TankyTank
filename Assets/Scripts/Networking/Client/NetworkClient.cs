@@ -20,22 +20,27 @@ public class NetworkClient : IDisposable
 
     private void OnClientDisconnect(ulong clientId)
     {
-        if(clientId != 0 && clientId != networkManager.LocalClientId) { return; }
-
-        if(SceneManager.GetActiveScene().name != MenuSceneName)
+        if (clientId != 0 && clientId != networkManager.LocalClientId) { return; }//clientId == 0 is host
+        Disconnect();
+    }
+    public void Disconnect()
+    {
+        
+        if (SceneManager.GetActiveScene().name != MenuSceneName)
         {
             SceneManager.LoadScene(MenuSceneName);
         }
 
-        if(networkManager.IsConnectedClient)
+        if (networkManager.IsConnectedClient)
         {
             networkManager.Shutdown();
         }
     }
-
     public void Dispose()
     {
-        if(networkManager != null)
+        if (networkManager != null)
             networkManager.OnClientDisconnectCallback -= OnClientDisconnect;
     }
+
+
 }

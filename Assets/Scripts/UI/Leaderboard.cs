@@ -10,6 +10,7 @@ public class Leaderboard : NetworkBehaviour
 {
     [SerializeField] private Transform leaderboardEntityHolder;
     [SerializeField] private LeaderboardEntityDisplay leaderboardEntityPrefab;
+    [SerializeField] private int entitiesToDisplay = 8;
     private NetworkList<LeaderboardEntityState> leaderboardEntities;
     private List<LeaderboardEntityDisplay> entityDisplays = new List<LeaderboardEntityDisplay>();
     private void Awake()
@@ -30,14 +31,16 @@ public class Leaderboard : NetworkBehaviour
                 });
             }
         }
-        if (!IsServer) return;
-        TankPlayer[] players = FindObjectsByType<TankPlayer>(FindObjectsSortMode.None);
-        foreach (TankPlayer player in players)
+        if (IsServer)
         {
-            HandlePlayerSpawned(player);
+            TankPlayer[] players = FindObjectsByType<TankPlayer>(FindObjectsSortMode.None);
+            foreach (TankPlayer player in players)
+            {
+                HandlePlayerSpawned(player);
+            }
+            TankPlayer.OnPlayerSpawned += HandlePlayerSpawned;
+            TankPlayer.OnPlayerDespawned += HandlePlayerDespawned;
         }
-        TankPlayer.OnPlayerSpawned += HandlePlayerSpawned;
-        TankPlayer.OnPlayerDespawned += HandlePlayerDespawned;
     }
 
     private void HandleLeaderboardEntitiesChanged(NetworkListEvent<LeaderboardEntityState> changeEvent)
@@ -75,6 +78,25 @@ public class Leaderboard : NetworkBehaviour
                 }
                 break;
         }
+        entityDisplays.Sort((x, y )=> y.Coins.CompareTo(x.Coins));
+
+        for(int i = 0; i < entityDisplays.Count; i++)
+        {
+            entityDisplays[i].transform.SetSiblingIndex(i);
+            entityDisplays[i].UpdateText();
+            entityDisplays[i].gameObject.SetActive(i <= entitiesToDisplay - 1);
+        }
+        LeaderboardEntityDisplay myDisplay = 
+            entityDisplays.FirstOrDefault(x => x.ClientId == NetworkManager.Singleton.LocalClientId);
+        if(myDisplay != null)
+        {
+            if(myDisplay.transform.GetSiblingIndex() >= entitiesToDisplay)
+            {
+                //hide the last person then show the owner
+                leaderboardEntityHolder.GetChild(entitiesToDisplay - 1).gameObject.SetActive(false);
+                myDisplay.gameObject.SetActive(true);
+            }
+        }
     }
 
     public override void OnNetworkDespawn()
@@ -83,9 +105,11 @@ public class Leaderboard : NetworkBehaviour
         {
             leaderboardEntities.OnListChanged -= HandleLeaderboardEntitiesChanged;
         }
-        if (!IsServer) return;
-        TankPlayer.OnPlayerSpawned -= HandlePlayerSpawned;
-        TankPlayer.OnPlayerDespawned -= HandlePlayerDespawned;
+        if (IsServer)
+        {
+            TankPlayer.OnPlayerSpawned -= HandlePlayerSpawned;
+            TankPlayer.OnPlayerDespawned -= HandlePlayerDespawned;
+        }
     }
     private void HandlePlayerSpawned(TankPlayer player)
     {
@@ -95,6 +119,7 @@ public class Leaderboard : NetworkBehaviour
             PlayerName = player.PlayerName.Value,
             Coins = 0
         });
+        player.Wallet.TotalCoins.OnValueChanged += (oldCoins, newCoins) => HandleCoinsChanged(player.OwnerClientId, newCoins);
     }
     private void HandlePlayerDespawned(TankPlayer player)
     {
@@ -105,5 +130,20 @@ public class Leaderboard : NetworkBehaviour
             leaderboardEntities.Remove(entity);
             break;
         }
+        player.Wallet.TotalCoins.OnValueChanged -= (oldCoins, newCoins) => HandleCoinsChanged(player.OwnerClientId, newCoins);
+    }
+    private void HandleCoinsChanged(ulong clientId, int newCoins)
+    {
+        for (int i = 0; i < leaderboardEntities.Count; i++)
+        {
+            if (leaderboardEntities[i].ClientId != clientId) continue;
+            leaderboardEntities[i] = new LeaderboardEntityState
+            {
+                ClientId = leaderboardEntities[i].ClientId,
+                PlayerName = leaderboardEntities[i].PlayerName,
+                Coins = newCoins
+            };
+        }
+        return;
     }
 }

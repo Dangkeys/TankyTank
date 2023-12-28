@@ -148,3 +148,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   disPlayText: {fileID: 3154727453494555785}
+  ownerColor: {r: 0.23921567, g: 0.8117647, b: 0.2800866, a: 1}

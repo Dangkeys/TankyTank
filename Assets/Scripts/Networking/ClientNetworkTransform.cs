@@ -9,7 +9,9 @@ public class ClientNetworkTransform : NetworkTransform
     {
         base.OnNetworkSpawn();
         CanCommitToTransform = IsOwner;
+        
     }
+    
 
     protected override void Update()
     {

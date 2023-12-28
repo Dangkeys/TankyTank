@@ -15,13 +15,13 @@ using Unity.Services.Relay.Models;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class HostGameManager: IDisposable
+public class HostGameManager : IDisposable
 {
     private Allocation allocation;
     private string joinCode;
     private string lobbyId;
 
-    public NetworkServer NetworkServer {get; private set;}
+    public NetworkServer NetworkServer { get; private set; }
 
     private const int MaxConnections = 20;
     private const string GameSceneName = "Game";
@@ -94,8 +94,21 @@ public class HostGameManager: IDisposable
         NetworkManager.Singleton.NetworkConfig.ConnectionData = payloadBytes;
 
         NetworkManager.Singleton.StartHost();
+        NetworkServer.OnclientLeft += HandleClientLeft;
 
         NetworkManager.Singleton.SceneManager.LoadScene(GameSceneName, LoadSceneMode.Single);
+    }
+
+    private async void HandleClientLeft(string authId)
+    {
+        try
+        {
+            await LobbyService.Instance.RemovePlayerAsync(lobbyId, authId);
+        }
+        catch (LobbyServiceException e)
+        {
+            Debug.Log(e);
+        }
     }
 
     private IEnumerator HearbeatLobby(float waitTimeSeconds)
@@ -108,21 +121,27 @@ public class HostGameManager: IDisposable
         }
     }
 
-    public async void Dispose()
+    public void Dispose()
+    {
+        Shutdown();
+    }
+
+    public async void Shutdown()
     {
         HostSingleton.Instance.StopCoroutine(nameof(HearbeatLobby));
-        if(!string.IsNullOrEmpty(lobbyId))
+        if (!string.IsNullOrEmpty(lobbyId))
         {
             try
             {
                 await Lobbies.Instance.DeleteLobbyAsync(lobbyId);
             }
-            catch(LobbyServiceException e)
+            catch (LobbyServiceException e)
             {
                 Debug.Log(e);
             }
             lobbyId = string.Empty;
         }
+        NetworkServer.OnclientLeft -= HandleClientLeft;
         NetworkServer?.Dispose();
     }
 }
