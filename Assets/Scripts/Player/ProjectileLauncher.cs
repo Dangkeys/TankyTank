@@ -9,7 +9,8 @@ using UnityEngine.InputSystem;
 
 public class ProjectileLauncher : NetworkBehaviour
 {
-    [Header("Settings")]
+    [Header("References")]
+    [SerializeField] private TankPlayer player;
     [SerializeField] InputReader inputReader;
     [SerializeField] Transform projectileSpawnPoint;
     [SerializeField] GameObject serverProjectilePrefab;
@@ -42,9 +43,9 @@ public class ProjectileLauncher : NetworkBehaviour
         if (!IsOwner) return;
         isPointerOverUI = EventSystem.current.IsPointerOverGameObject();
         if (!shouldFire) return;
-        if(Time.time < (1/fireRate) + previousFireTime) return;
+        if (Time.time < (1 / fireRate) + previousFireTime) return;
         PrimaryFireServerRpc(projectileSpawnPoint.position, projectileSpawnPoint.up);
-        SpawnDummyProjectile(projectileSpawnPoint.position, projectileSpawnPoint.up);
+        SpawnDummyProjectile(projectileSpawnPoint.position, projectileSpawnPoint.up, player.TeamIndex.Value);
         previousFireTime = Time.time;
     }
 
@@ -57,9 +58,9 @@ public class ProjectileLauncher : NetworkBehaviour
     }
     private void HandlePrimaryFire(bool shouldFire)
     {
-        if(shouldFire)
+        if (shouldFire)
         {
-            if(isPointerOverUI) return;
+            if (isPointerOverUI) return;
         }
         this.shouldFire = shouldFire;
     }
@@ -69,30 +70,33 @@ public class ProjectileLauncher : NetworkBehaviour
         GameObject projectileInstance = Instantiate(serverProjectilePrefab, spawnPos, Quaternion.identity);
         projectileInstance.transform.up = direction;
         Physics2D.IgnoreCollision(playerCollider, projectileInstance.GetComponent<Collider2D>());
-
-        if(projectileInstance.TryGetComponent<DealDamageOnContact>(out DealDamageOnContact dealDamageOnContact))
+        if (projectileInstance.TryGetComponent<Projectile>(out Projectile projectile))
         {
-            dealDamageOnContact.SetOwner(OwnerClientId);
+            projectile.Initialise(player.TeamIndex.Value);
         }
         if (projectileInstance.TryGetComponent<Rigidbody2D>(out Rigidbody2D rb))
         {
             rb.velocity = rb.transform.up * projectileSpeed;
         }
-        SpawnDummyProjectileClientRpc(spawnPos, direction);
+        SpawnDummyProjectileClientRpc(spawnPos, direction, player.TeamIndex.Value);
     }
     [ClientRpc]
-    private void SpawnDummyProjectileClientRpc(Vector3 spawnPos, Vector3 direction)
+    private void SpawnDummyProjectileClientRpc(Vector3 spawnPos, Vector3 direction, int teamIndex)
     {
         if (IsOwner) return;
-        SpawnDummyProjectile(spawnPos, direction);
+        SpawnDummyProjectile(spawnPos, direction, teamIndex);
     }
-    private void SpawnDummyProjectile(Vector3 spawnPos, Vector3 direction)
+    private void SpawnDummyProjectile(Vector3 spawnPos, Vector3 direction, int teamIndex)
     {
         muzzleFlash.SetActive(true);
         muzzleFlashTimer = muzzleFlashDuration;
         GameObject projectileInstance = Instantiate(clientProjectilePrefab, spawnPos, Quaternion.identity);
         projectileInstance.transform.up = direction;
         Physics2D.IgnoreCollision(playerCollider, projectileInstance.GetComponent<Collider2D>());
+        if (projectileInstance.TryGetComponent<Projectile>(out Projectile projectile))
+        {
+            projectile.Initialise(teamIndex);
+        }
         if (projectileInstance.TryGetComponent<Rigidbody2D>(out Rigidbody2D rb))
         {
             rb.velocity = rb.transform.up * projectileSpeed;
