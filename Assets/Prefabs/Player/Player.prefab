@@ -5462,6 +5462,8 @@ MonoBehaviour:
         byte0027: 0
         byte0028: 0
         byte0029: 0
+  TeamIndex:
+    m_InternalValue: 0
 --- !u!1 &4844876348779136526
 GameObject:
   m_ObjectHideFlags: 0
@@ -10699,6 +10701,7 @@ GameObject:
   - component: {fileID: 7017645772946350634}
   - component: {fileID: 774086636754458760}
   - component: {fileID: 5375859562251988057}
+  - component: {fileID: 5745770374740895735}
   m_Layer: 0
   m_Name: TankTreads
   m_TagString: Untagged
@@ -10852,6 +10855,23 @@ MonoBehaviour:
   InLocalSpace: 0
   Interpolate: 1
   SlerpPosition: 0
+--- !u!114 &5745770374740895735
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6970446064782713450}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b158b2985b66ac446bd7bcffb71e8d30, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  teamColorLookup: {fileID: 11400000, guid: 1d570402f1f170944bbede0f320033c6, type: 2}
+  player: {fileID: 4489936508310109109}
+  playerSprites:
+  - {fileID: 8878319105403597104}
+  - {fileID: 1906640849645813258}
 --- !u!1 &7192788425385016956
 GameObject:
   m_ObjectHideFlags: 0

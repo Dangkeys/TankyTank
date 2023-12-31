@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using UnityEngine;
@@ -8,16 +9,17 @@ using UnityEngine;
 public class NetworkServer : IDisposable
 {
     private NetworkManager networkManager;
+    private NetworkObject playerPrefab;
     public Action<string> OnclientLeft;
     public Action<UserData> OnUserJoined;
     public Action<UserData> OnUserLeft;
     private Dictionary<ulong, string> clientIdToAuth = new Dictionary<ulong, string>();
     private Dictionary<string, UserData> authIdToUserData = new Dictionary<string, UserData>();
 
-    public NetworkServer(NetworkManager networkManager)
+    public NetworkServer(NetworkManager networkManager, NetworkObject playerPrefab)
     {
         this.networkManager = networkManager;
-
+        this.playerPrefab = playerPrefab;
         networkManager.ConnectionApprovalCallback += ApprovalCheck;
         networkManager.OnServerStarted += OnNetworkReady;
     }
@@ -37,14 +39,20 @@ public class NetworkServer : IDisposable
         clientIdToAuth[request.ClientNetworkId] = userData.userAuthId;
         authIdToUserData[userData.userAuthId] = userData;
         OnUserJoined?.Invoke(userData);
+        _ = SpawnPlayerDelayed(request.ClientNetworkId);
         response.Approved = true;
-        response.Position = SpawnPoint.GetRandomSpawnPos();
-        response.Rotation = Quaternion.identity;
-        response.CreatePlayerObject = true;
+        response.CreatePlayerObject = false;
     }
-
+    private async Task SpawnPlayerDelayed(ulong clientId)
+    {
+        await Task.Delay(1000);
+        NetworkObject playerInstance =
+            GameObject.Instantiate(playerPrefab, SpawnPoint.GetRandomSpawnPos(), Quaternion.identity);
+        playerInstance.SpawnAsPlayerObject(clientId);
+    }
     private void OnNetworkReady()
     {
+
         networkManager.OnClientDisconnectCallback += OnClientDisconnect;
 
     }
@@ -61,8 +69,8 @@ public class NetworkServer : IDisposable
     }
     public UserData GetUserDataByClientId(ulong clientId)
     {
-        if(!clientIdToAuth.TryGetValue(clientId, out string authId)) return null;
-        if(!authIdToUserData.TryGetValue(authId, out UserData userData)) return null;
+        if (!clientIdToAuth.TryGetValue(clientId, out string authId)) return null;
+        if (!authIdToUserData.TryGetValue(authId, out UserData userData)) return null;
         return userData;
     }
     public void Dispose()
@@ -71,7 +79,7 @@ public class NetworkServer : IDisposable
         networkManager.ConnectionApprovalCallback -= ApprovalCheck;
         networkManager.OnClientDisconnectCallback -= OnClientDisconnect;
         networkManager.OnServerStarted -= OnNetworkReady;
-        if(networkManager.IsListening)
+        if (networkManager.IsListening)
         {
             networkManager.Shutdown();
         }

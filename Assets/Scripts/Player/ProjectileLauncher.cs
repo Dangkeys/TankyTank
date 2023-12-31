@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Unity.Netcode;
 using Unity.Services.Matchmaker.Models;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 
 public class ProjectileLauncher : NetworkBehaviour
@@ -19,6 +20,7 @@ public class ProjectileLauncher : NetworkBehaviour
     [SerializeField] float projectileSpeed = 40f;
     [SerializeField] float fireRate;
     [SerializeField] float muzzleFlashDuration;
+    private bool isPointerOverUI;
     bool shouldFire;
     float previousFireTime;
     float muzzleFlashTimer;
@@ -38,6 +40,7 @@ public class ProjectileLauncher : NetworkBehaviour
                 muzzleFlash.SetActive(false);
         }
         if (!IsOwner) return;
+        isPointerOverUI = EventSystem.current.IsPointerOverGameObject();
         if (!shouldFire) return;
         if(Time.time < (1/fireRate) + previousFireTime) return;
         PrimaryFireServerRpc(projectileSpawnPoint.position, projectileSpawnPoint.up);
@@ -54,6 +57,10 @@ public class ProjectileLauncher : NetworkBehaviour
     }
     private void HandlePrimaryFire(bool shouldFire)
     {
+        if(shouldFire)
+        {
+            if(isPointerOverUI) return;
+        }
         this.shouldFire = shouldFire;
     }
     [ServerRpc]

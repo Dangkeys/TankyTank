@@ -22,17 +22,18 @@ public class ServerGameManager : IDisposable
     private int queryPort;
     private MatchplayBackfiller backfiller;
     private MultiplayAllocationService multiplayAllocationService;
+    private Dictionary<string, int> teamIdToTeamIndex = new Dictionary<string, int>();
 
     public NetworkServer NetworkServer { get; private set; }
 
-    private const string GameSceneName = "Game";
+    
 
-    public ServerGameManager(string serverIP, int serverPort, int queryPort, NetworkManager manager)
+    public ServerGameManager(string serverIP, int serverPort, int queryPort, NetworkManager manager, NetworkObject playerPrefab)
     {
         this.serverIP = serverIP;
         this.serverPort = serverPort;
         this.queryPort = queryPort;
-        NetworkServer = new NetworkServer(manager);
+        NetworkServer = new NetworkServer(manager, playerPrefab);
         multiplayAllocationService = new MultiplayAllocationService();
     }
 
@@ -65,8 +66,6 @@ public class ServerGameManager : IDisposable
             Debug.LogWarning("NetworkServer did not start as expected.");
             return;
         }
-
-        NetworkManager.Singleton.SceneManager.LoadScene(GameSceneName, LoadSceneMode.Single);
     }
 
     private async Task<MatchmakingResults> GetMatchmakerPayload()
@@ -97,7 +96,14 @@ public class ServerGameManager : IDisposable
 
     private void UserJoined(UserData user)
     {
-        backfiller.AddPlayerToMatch(user);
+        Team team = backfiller.GetTeamByUserId(user.userAuthId);
+        if(!teamIdToTeamIndex.TryGetValue(team.TeamId, out int teamIndex))
+        {
+            teamIndex = teamIdToTeamIndex.Count;
+            teamIdToTeamIndex.Add(team.TeamId, teamIndex);
+        }
+        user.teamIndex = teamIndex;
+        Debug.Log($"{user.userAuthId} {team.TeamId}");
         multiplayAllocationService.AddPlayer();
         if (!backfiller.NeedsPlayers() && backfiller.IsBackfilling)
         {
