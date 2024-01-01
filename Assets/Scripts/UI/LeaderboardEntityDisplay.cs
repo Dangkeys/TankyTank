@@ -8,19 +8,28 @@ using UnityEngine;
 public class LeaderboardEntityDisplay : MonoBehaviour
 {
     [SerializeField] private TMP_Text disPlayText;
-    [SerializeField] private Color ownerColor;
-    private FixedString32Bytes playerName;
+
+    private FixedString32Bytes displayName;
+    public int TeamIndex { get; private set; }
     public ulong ClientId { get; private set; }
     public int Coins { get; private set; }
-    public void Initiailise(ulong clientId, FixedString32Bytes playerName, int coins)
+    public void Initiailise(ulong clientId, FixedString32Bytes displayName, int coins)
     {
         ClientId = clientId;
-        this.playerName = playerName;
-        if(clientId == NetworkManager.Singleton.LocalClientId)
-        {
-            disPlayText.color = ownerColor;
-        }
+        this.displayName = displayName;
+
         UpdateCoins(coins);
+    }
+    public void Initiailise(int teamIndex, FixedString32Bytes displayName, int coins)
+    {
+        TeamIndex = teamIndex;
+        this.displayName = displayName;
+
+        UpdateCoins(coins);
+    }
+    public void SetColour(Color colour)
+    {
+        disPlayText.color = colour;
     }
     public void UpdateCoins(int coins)
     {
@@ -29,6 +38,6 @@ public class LeaderboardEntityDisplay : MonoBehaviour
     }
     public void UpdateText()
     {
-        disPlayText.text = $"{transform.GetSiblingIndex() + 1}. {playerName} ({Coins})";
+        disPlayText.text = $"{transform.GetSiblingIndex() + 1}. {displayName} ({Coins})";
     }
 }
